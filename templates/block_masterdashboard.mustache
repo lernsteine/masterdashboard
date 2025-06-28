@@ -1,0 +1,59 @@
+<!-- File: templates/block_masterdashboard.mustache -->
+<div class="block_masterdashboard">
+
+    {{#introtext}}
+    <div class="dashboardintro">{{{introtext}}}</div>
+    {{/introtext}}
+
+    {{#overdue}}
+    <div class="section">
+        <h3>Überfällige Kurse</h3>
+        {{#courses}}
+        <div class="course-card overdue">
+            <img src="{{image}}" alt="{{name}}" class="course-thumb" />
+            <div class="course-content">
+                <div class="course-info">
+                    <a href="{{url}}" class="course-name">{{name}}</a>
+                    <div class="date">Fällig am: {{duedate}}</div>
+                </div>
+            </div>
+        </div>
+        {{/courses}}
+    </div>
+    {{/overdue}}
+
+    {{#inprogress}}
+    <div class="section">
+        <h3>Kurse in Bearbeitung</h3>
+        {{#courses}}
+        <div class="course-card inprogress">
+            <img src="{{image}}" alt="{{name}}" class="course-thumb" />
+            <div class="course-content">
+                <div class="course-info">
+                    <a href="{{url}}" class="course-name">{{name}}</a>
+                    <div class="date">Endet am: {{enddate}}</div>
+                </div>
+            </div>
+        </div>
+        {{/courses}}
+    </div>
+    {{/inprogress}}
+
+    {{#completed}}
+    <div class="section">
+        <h3>Abgeschlossene Kurse</h3>
+        {{#courses}}
+        <div class="course-card completed">
+            <img src="{{image}}" alt="{{name}}" class="course-thumb" />
+            <div class="course-content">
+                <div class="course-info">
+                    <a href="{{url}}" class="course-name">{{name}}</a>
+                    <div class="date">Abgeschlossen am: {{completiondate}}</div>
+                </div>
+            </div>
+        </div>
+        {{/courses}}
+    </div>
+    {{/completed}}
+
+</div>

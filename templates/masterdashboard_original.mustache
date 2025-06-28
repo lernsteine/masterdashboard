@@ -1,0 +1,18 @@
+<div class="block-masterdashboard">
+  {{#courses}}
+    <div class="dashboard-course {{status}}">
+      <div class="course-header">
+        <h3><a href="{{url}}">{{fullname}}</a></h3>
+      </div>
+      {{#summary}}
+        <div class="course-summary">
+          {{{summary}}}
+        </div>
+      {{/summary}}
+    </div>
+  {{/courses}}
+
+  {{^courses}}
+    <p>{{#str}} nocourses, block_masterdashboard {{/str}}</p>
+  {{/courses}}
+</div>

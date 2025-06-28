@@ -1,78 +1,112 @@
+.block_masterdashboard {
+    padding: 1rem;
+}
 
-.block_masterdashboard .section {
-  margin-bottom: 40px;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
-  padding: 12px;
-  background: #fff;
+/* DashboardIntro (Willkommenstext) */
+.block_masterdashboard .dashboardintro {
+    font-size: 1.2rem;
+    color: #595959;
+    font-weight: 400;
+    margin-bottom: 2rem;
 }
-.block_masterdashboard .sectiontitle {
-  font-size: 16px;
-  font-weight: normal;
-  color: #555;
-  margin: 4px 0 12px 0;
+
+/* Sektionen */
+.section {
+    margin-bottom: 2rem;
 }
-.block_masterdashboard .course-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
+.sectiontitle {
+	font-weight: 700;
+	 color: #595959;
+	 padding: 0.50rem;
 }
+
+
+.block_masterdashboard .section h3 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #2c3e50;
+    border-bottom: 2px solid #0073e6;
+    padding-bottom: 0.4rem;
+    margin-bottom: 1.2rem;
+    letter-spacing: 0.5px;
+}
+
+/* Kurskarten */
 .block_masterdashboard .course-card {
-  background: #fff;
-  border-radius: 8px;
-  padding: 10px;
-  display: flex;
-  flex: 1 1 300px;
-  min-width: 260px;
-  max-width: 100%;
-  align-items: flex-start;
-  gap: 10px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-  border-left: 5px solid #ccc;
+    display: flex;
+    align-items: center;
+    border-left: 8px solid transparent;
+    background: #f9f9f9;
+    margin-bottom: 0.75rem;
+    padding: 0.75rem;
+    border-radius: 6px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
-.block_masterdashboard .course-card.overdue {
-  border-color: #f44336;
+
+/* Kursbild */
+.block_masterdashboard .course-thumb {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 2px;
+    margin-right: 0.75rem;
 }
-.block_masterdashboard .course-card.inprogress {
-  border-color: #ffeb3b;
+
+/* Kursinhalt */
+.block_masterdashboard .course-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
-.block_masterdashboard .course-card.completed {
-  border-color: #4caf50;
-}
-.block_masterdashboard .course-thumb-wrapper {
-  flex-shrink: 0;
-}
-.block_masterdashboard .course-thumb-wrapper img.course-thumb {
-  width: 48px;
-  height: 48px;
-  object-fit: cover;
-  border-radius: 4px;
-}
+
 .block_masterdashboard .course-info {
-  display: flex;
-  flex-direction: column;
-}
-.block_masterdashboard .course-info a.coursename {
-  font-weight: bold;
-  color: #222;
-  margin-bottom: 4px;
-  text-decoration: none;
-}
-.block_masterdashboard .course-info .date {
-  font-size: 13px;
-  color: #666;
-}
-@media (max-width: 600px) {
-  .block_masterdashboard .course-card {
-    flex-direction: row;
-    flex-wrap: nowrap;
-  }
+    margin: 0;
 }
 
+.block_masterdashboard .course-info a {
+    font-size: 1rem;
+    font-weight: 400;
+    color: #222;
+    text-decoration: none;
+}
 
-@media (max-width: 480px) {
-  .block_masterdashboard .course-card {
-    flex: 1 1 100%;
-    min-width: 100%;
-  }
+.block_masterdashboard .course-info a:hover {
+    text-decoration: underline;
+}
+
+.block_masterdashboard .date {
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: 0.2rem;
+}
+
+/* Farbige Ränder je nach Status */
+.block_masterdashboard .course-card.overdue {
+    border-left-color: #e53935;
+}
+
+.block_masterdashboard .course-card.inprogress {
+    border-left-color: #fbc02d;
+}
+
+.block_masterdashboard .course-card.completed {
+    border-left-color: #43a047;
+}
+
+/* Mobile Ansicht */
+@media screen and (max-width: 600px) {
+    .block_masterdashboard .course-card {
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .block_masterdashboard .course-thumb {
+        width: 50px;
+        height: 50px;
+        margin-right: 0.75rem;
+    }
+
+    .block_masterdashboard .course-content {
+        margin-left: 0;
+    }
 }

@@ -3,7 +3,7 @@ defined('MOODLE_INTERNAL') || die();
 
 class block_masterdashboard extends block_base {
     public function init() {
-        $this->title = ''; // Kein Blocktitel sichtbar
+        $this->title = ''; // Kein Blocktitel
     }
 
     public function get_content() {
@@ -19,10 +19,11 @@ class block_masterdashboard extends block_base {
         $PAGE->requires->css(new moodle_url('/blocks/masterdashboard/styles.css'));
 
         $courses = enrol_get_users_courses($USER->id, true, '*');
-        // Sort courses by enddate descending
+
         uasort($courses, function($a, $b) {
             return ($b->enddate ?? 0) <=> ($a->enddate ?? 0);
         });
+
         $fs = get_file_storage();
         $overdue = '';
         $inprogress = '';
@@ -37,9 +38,9 @@ class block_masterdashboard extends block_base {
 
             $imageurl = $OUTPUT->image_url('i/course');
             if ($fs && $context) {
-                $files = $fs->get_area_files($context->id, 'course', 'overviewfiles', false, 'itemid, filepath, filename', false);
+                $files = $fs->get_area_files($context->id, 'course', 'overviewfiles', false);
                 foreach ($files as $file) {
-                    if (in_array($file->get_mimetype(), ['image/jpeg', 'image/png', 'image/gif'])) {
+                    if ($file->is_valid_image()) {
                         $imageurl = moodle_url::make_pluginfile_url(
                             $file->get_contextid(), $file->get_component(), $file->get_filearea(),
                             null, $file->get_filepath(), $file->get_filename()
@@ -87,22 +88,26 @@ class block_masterdashboard extends block_base {
             }
         }
 
-        $output = '<div class="block_masterdashboard">';
+        // 🆕 Mehrsprachiger Begrüßungstext über Sprachdatei
+       // $output = '<div class="block_masterdashboard">';
+        // $output .= '<div class="dashboardintro">' . get_string('dashboardintro', 'block_masterdashboard') . '</div>';
+
         if (!empty($overdue)) {
-$output .= '<div class="section">';
-$output .= html_writer::div(get_string("overduecourses", "block_masterdashboard"), "sectiontitle");
-$output .= '<div class="course-grid">' . $overdue . '</div></div>';
+            $output .= '<div class="section">';
+            $output .= html_writer::div(get_string("overduecourses", "block_masterdashboard"), "sectiontitle");
+            $output .= '<div class="course-grid">' . $overdue . '</div></div>';
         }
         if (!empty($inprogress)) {
-$output .= '<div class="section">';
-$output .= html_writer::div(get_string("inprogresscourses", "block_masterdashboard"), "sectiontitle");
-$output .= '<div class="course-grid">' . $inprogress . '</div></div>';
+            $output .= '<div class="section">';
+            $output .= html_writer::div(get_string("inprogresscourses", "block_masterdashboard"), "sectiontitle");
+            $output .= '<div class="course-grid">' . $inprogress . '</div></div>';
         }
         if (!empty($completed)) {
-$output .= '<div class="section">';
-$output .= html_writer::div(get_string("completedcourses", "block_masterdashboard"), "sectiontitle");
-$output .= '<div class="course-grid">' . $completed . '</div></div>';
+            $output .= '<div class="section">';
+            $output .= html_writer::div(get_string("completedcourses", "block_masterdashboard"), "sectiontitle");
+            $output .= '<div class="course-grid">' . $completed . '</div></div>';
         }
+
         $output .= '</div>';
 
         $this->content = new stdClass();
