@@ -1,100 +1,76 @@
 {{!
-    @template block_masterdashboard/block_masterdashboard
+@template block_teamdashboard/courselist
 
-    This template renders categorized course cards (overdue, inprogress, completed).
-
-    Example context (json):
-    {
-        "introtext": "Willkommen!",
-        "overdue": {
-            "courses": [
-                {
-                    "name": "Mathematik",
-                    "url": "https://example.com/course/1",
-                    "duedate": "Montag, 24.06.2025",
-                    "image": "https://example.com/image1.jpg"
-                }
-            ]
-        },
-        "inprogress": {
-            "courses": [
-                {
-                    "name": "Deutsch",
-                    "url": "https://example.com/course/2",
-                    "enddate": "Dienstag, 25.06.2025",
-                    "image": "https://example.com/image2.jpg"
-                }
-            ]
-        },
-        "completed": {
-            "courses": [
-                {
-                    "name": "Englisch",
-                    "url": "https://example.com/course/3",
-                    "completiondate": "Sonntag, 23.06.2025",
-                    "image": "https://example.com/image3.jpg"
-                }
-            ]
+Example context (JSON):
+{
+    "courses": [
+        {
+            "name": "Course 1",
+            "url": "https://moodle.example.com/course/view.php?id=1",
+            "progress": {
+                "completed": 50,
+                "inprogress": 30,
+                "overdue": 20
+            },
+            "participants": 15
         }
-    }
+    ],
+    "legend_completed": "Abgeschlossen",
+    "legend_inprogress": "In Bearbeitung",
+    "legend_overdue": "Überfällig",
+    "hasprev": true,
+    "prevurl": "https://moodle.example.com/page=1",
+    "hasnext": true,
+    "nexturl": "https://moodle.example.com/page=3",
+    "nextlabel": "Mehr anzeigen"
+}
 }}
 
-<!-- File: templates/block_masterdashboard.mustache -->
-<div class="block_masterdashboard">
+<div style="font-family:Arial,sans-serif; font-size:0.95em; max-width:800px;">
 
-    {{#introtext}}
-    <div class="dashboardintro">{{{introtext}}}</div>
-    {{/introtext}}
+    <!-- Legende -->
+    <div style="text-align:right; margin-bottom:12px; font-size:0.8em; color:#444; display:flex; flex-wrap:wrap; gap:0.6em; justify-content:flex-end;">
+        <span style="display:inline-flex; align-items:center; gap:0.25em;">
+            <span style="width:6px; height:14px; background:#4caf50; display:inline-block;"></span> {{legend_completed}}
+        </span>
+        <span style="display:inline-flex; align-items:center; gap:0.25em;">
+            <span style="width:6px; height:14px; background:#ffeb3b; display:inline-block;"></span> {{legend_inprogress}}
+        </span>
+        <span style="display:inline-flex; align-items:center; gap:0.25em;">
+            <span style="width:6px; height:14px; background:#e74c3c; display:inline-block;"></span> {{legend_overdue}}
+        </span>
+    </div>
 
-    {{#overdue}}
-    <div class="section">
-        <h3>Überfällige Kurse</h3>
-        {{#courses}}
-        <div class="course-card overdue">
-            <img src="{{image}}" alt="{{name}}" class="course-thumb" />
-            <div class="course-content">
-                <div class="course-info">
-                    <a href="{{url}}" class="course-name">{{name}}</a>
-                    <div class="date">Fällig am: {{duedate}}</div>
-                </div>
+    <!-- Course list -->
+    {{#courses}}
+        <div style="border:1px solid #ddd; border-radius:8px; padding:12px; margin-bottom:2px;">
+            <h3 class="teamdashboard-course-title">
+                <a href="{{url}}" style="color:inherit; text-decoration:none;">{{name}}</a>
+            </h3>
+
+            <div style="background:#eee; height:14px; border-radius:6px; overflow:hidden; margin:6px 0 12px 0;">
+                <div style="background:#4caf50; width:{{progress.completed}}%; height:14px; float:left;"></div>
+                <div style="background:#ffeb3b; width:{{progress.inprogress}}%; height:14px; float:left;"></div>
+                <div style="background:#e74c3c; width:{{progress.overdue}}%; height:14px; float:left;"></div>
+            </div>
+
+            <div style="font-size:0.9em; color:#666;">
+                👥 Teilnehmer/innen: {{participants}}
             </div>
         </div>
-        {{/courses}}
-    </div>
-    {{/overdue}}
+    {{/courses}}
 
-    {{#inprogress}}
-    <div class="section">
-        <h3>Kurse in Bearbeitung</h3>
-        {{#courses}}
-        <div class="course-card inprogress">
-            <img src="{{image}}" alt="{{name}}" class="course-thumb" />
-            <div class="course-content">
-                <div class="course-info">
-                    <a href="{{url}}" class="course-name">{{name}}</a>
-                    <div class="date">Endet am: {{enddate}}</div>
-                </div>
-            </div>
-        </div>
-        {{/courses}}
-    </div>
-    {{/inprogress}}
+    <!-- Pagination -->
+    <div style="text-align:center; margin-top:0.0em;">
+   {{#hasprev}}
+    <a href="{{prevurl}}" style="font-size:1.5em; font-weight:bold; color:#000000; text-decoration:none; margin-right:1em;">🡄</a>
+{{/hasprev}}
 
-    {{#completed}}
-    <div class="section">
-        <h3>Abgeschlossene Kurse</h3>
-        {{#courses}}
-        <div class="course-card completed">
-            <img src="{{image}}" alt="{{name}}" class="course-thumb" />
-            <div class="course-content">
-                <div class="course-info">
-                    <a href="{{url}}" class="course-name">{{name}}</a>
-                    <div class="date">Abgeschlossen am: {{completiondate}}</div>
-                </div>
-            </div>
-        </div>
-        {{/courses}}
-    </div>
-    {{/completed}}
+{{#hasnext}}
+    <a href="{{nexturl}}" style="font-size:1.5em; font-weight:bold; color:#000000; text-decoration:none;">🡆</a>
+{{/hasnext}}
+
+</div>
+
 
 </div>
