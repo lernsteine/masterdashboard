@@ -15,163 +15,137 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * [Short description of the file]
+ * Privacy provider for block_teamdashboard.
  *
- * @package    block_masterdashboard
+ * @package    block_teamdashboard
  * @copyright  2025 Ralf Hagemeister <ralf.hagemeister@lernsteine.de>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-/**
- * Class block_masterdashboard - provides the main dashboard block.
- */
-class block_masterdashboard extends block_base {
+defined('MOODLE_INTERNAL') || die();
 
-    /**
-     * Initializes the block with a title.
-     */
+require_once($CFG->libdir . '/completionlib.php');
+
+class block_teamdashboard extends block_base {
+
     public function init() {
-        $this->title = '';
+        $this->title = get_string('pluginname', 'block_teamdashboard');
     }
 
-    /**
-     * Generates the block content.
-     *
-     * @return stdClass
-     */
     public function get_content() {
-        global $USER, $CFG, $OUTPUT;
+        global $OUTPUT, $USER, $DB;
 
         if ($this->content !== null) {
             return $this->content;
         }
 
-        include_once($CFG->libdir . '/completionlib.php');
-        include_once($CFG->dirroot . '/course/lib.php');
-
-        $this->page->requires->css(new moodle_url('/blocks/masterdashboard/styles.css'));
-
-        $courses = enrol_get_users_courses($USER->id, true, '*');
-        uasort($courses, function ($a, $b) {
-            return ($b->enddate ?? 0) <=> ($a->enddate ?? 0);
-        });
-
-        $fs = get_file_storage();
-        $overdue = '';
-        $inprogress = '';
-        $completed = '';
-
-        foreach ($courses as $course) {
-            if (!$course->enablecompletion) {
-                continue;
-            }
-
-            $completioninfo = new completion_info($course);
-            $iscomplete = $completioninfo->is_course_complete($USER->id);
-            $context = context_course::instance($course->id, IGNORE_MISSING);
-
-            $imageurl = $OUTPUT->image_url('i/course');
-            if ($fs && $context) {
-                $files = $fs->get_area_files($context->id, 'course', 'overviewfiles', false, 'itemid, filepath, filename', false);
-                foreach ($files as $file) {
-                    if (in_array($file->get_mimetype(), ['image/jpeg', 'image/png', 'image/gif'])) {
-                        $imageurl = moodle_url::make_pluginfile_url(
-                            $file->get_contextid(),
-                            $file->get_component(),
-                            $file->get_filearea(),
-                            null,
-                            $file->get_filepath(),
-                            $file->get_filename()
-                        );
-                        break;
-                    }
-                }
-            }
-
-            $imgtag = html_writer::empty_tag('img', [
-                'src' => $imageurl,
-                'class' => 'course-thumb',
-                'alt' => '',
-            ]);
-            $courselink = html_writer::link(
-                new moodle_url('/course/view.php', ['id' => $course->id]),
-                format_string($course->fullname),
-                ['class' => 'coursename']
-            );
-
-            $dateinfo = '';
-            $status = '';
-            if ($iscomplete) {
-                $status = 'completed';
-
-                $completedon = '';
-                $completions = $completioninfo->get_completions($USER->id);
-                foreach ($completions as $completion) {
-                    if ($completion->is_complete() && !empty($completion->timecompleted)) {
-                        $completedon = userdate($completion->timecompleted, '%A, %d.%m.%Y');
-                        break;
-                    }
-                }
-
-                $dateinfo = get_string('completedon', 'block_masterdashboard') . ': ' . $completedon;
-            } else if (!empty($course->enddate) && time() > $course->enddate) {
-                $status = 'overdue';
-                $dateinfo = get_string('duedate', 'block_masterdashboard') . ': ' .
-                    userdate($course->enddate, '%A, %d.%m.%Y');
-            } else {
-                $status = 'inprogress';
-                $dateinfo = get_string('enddate', 'block_masterdashboard') . ': ' .
-                    (!empty($course->enddate) ? userdate($course->enddate, '%A, %d.%m.%Y') : '-');
-            }
-
-            $info = html_writer::div($courselink, 'coursename') .
-                    html_writer::div($dateinfo, 'date');
-            $infowrap = html_writer::div($info, 'course-info');
-
-            $card = html_writer::div(
-                html_writer::div($imgtag, 'course-thumb') . $infowrap,
-                'course-card ' . $status
-            );
-
-            if ($status === 'completed') {
-                $completed .= $card;
-            } else if ($status === 'inprogress') {
-                $inprogress .= $card;
-            } else {
-                $overdue .= $card;
-            }
-        }
-
-        $output = html_writer::div(
-            html_writer::div(get_string('dashboardintro', 'block_masterdashboard'), 'dashboardintro'),
-            'block_masterdashboard'
-        );
-
-        if (!empty($overdue)) {
-            $output .= html_writer::div(
-                html_writer::tag('h3', get_string('overduecourses', 'block_masterdashboard')) .
-                html_writer::div($overdue, 'course-grid'),
-                'section'
-            );
-        }
-        if (!empty($inprogress)) {
-            $output .= html_writer::div(
-                html_writer::tag('h3', get_string('inprogresscourses', 'block_masterdashboard')) .
-                html_writer::div($inprogress, 'course-grid'),
-                'section'
-            );
-        }
-        if (!empty($completed)) {
-            $output .= html_writer::div(
-                html_writer::tag('h3', get_string('completedcourses', 'block_masterdashboard')) .
-                html_writer::div($completed, 'course-grid'),
-                'section'
-            );
-        }
-
         $this->content = new stdClass();
-        $this->content->text = $output;
-        $this->content->footer = '';
+
+        $perpage = 4;
+        $page = optional_param('tdpage', 0, PARAM_INT);
+        $offset = $page * $perpage;
+
+        // Rollen laden.
+        $teacherrole = $DB->get_record('role', ['shortname' => 'teacher']);
+        $studentrole = $DB->get_record('role', ['shortname' => 'student']);
+        if (!$teacherrole || !$studentrole) {
+            $this->content->text = 'Role "teacher" or "student" not found.';
+            return $this->content;
+        }
+
+        // Alle sichtbaren Kurse holen.
+        $sql = "SELECT * FROM {course} WHERE visible = 1 AND id > 1 ORDER BY sortorder ASC";
+        $allcourses = $DB->get_records_sql($sql);
+
+        // Nur Kurse mit Teacher-Rolle.
+        $teacherCourses = [];
+        foreach ($allcourses as $course) {
+            $context = context_course::instance($course->id);
+            if (user_has_role_assignment($USER->id, $teacherrole->id, $context->id)) {
+                $teacherCourses[] = $course;
+            }
+        }
+
+        // Pagination nach Filterung.
+        $totalteacher = count($teacherCourses);
+        $paginatedCourses = array_slice($teacherCourses, $offset, $perpage);
+
+        $coursedata = [];
+        $now = time();
+
+        foreach ($paginatedCourses as $course) {
+            $context = context_course::instance($course->id);
+            $groupmode = groups_get_course_groupmode($course);
+            $canseeallgroups = has_capability('moodle/site:accessallgroups', $context);
+            $users = [];
+
+            if ($groupmode && !$canseeallgroups) {
+                $trainergroups = groups_get_user_groups($course->id, $USER->id);
+                foreach ($trainergroups[0] as $groupid) {
+                    $members = groups_get_members($groupid, 'u.*');
+                    foreach ($members as $id => $member) {
+                        $users[$id] = $member;
+                    }
+                }
+            } else {
+                $users = get_enrolled_users($context, 'moodle/course:viewparticipants');
+            }
+
+            $students = array_filter($users, function($u) use ($studentrole, $context) {
+                return user_has_role_assignment($u->id, $studentrole->id, $context->id);
+            });
+
+            $completion = new completion_info($course);
+            $hascompletion = $completion->is_enabled();
+            $completed = $inprogress = $overdue = 0;
+
+            foreach ($students as $user) {
+                if (!$hascompletion) {
+                    $inprogress++;
+                    continue;
+                }
+
+                if ($completion->is_course_complete($user->id)) {
+                    $completed++;
+                } else if (!empty($course->enddate) && $now > $course->enddate) {
+                    $overdue++;
+                } else {
+                    $inprogress++;
+                }
+            }
+
+            $total = max(count($students), 1);
+
+            $coursedata[] = [
+                'name' => format_string($course->fullname),
+                'url' => (new moodle_url('/course/view.php', ['id' => $course->id]))->out(),
+                'participants' => count($students),
+                'progress' => [
+                    'completed' => round($completed / $total * 100),
+                    'inprogress' => round($inprogress / $total * 100),
+                    'overdue' => round($overdue / $total * 100),
+                ],
+            ];
+        }
+
+        // Navigation URLs.
+        $prevurl = new moodle_url($this->page->url, ['tdpage' => max(0, $page - 1)]);
+        $nexturl = new moodle_url($this->page->url, ['tdpage' => $page + 1]);
+
+        // Template-Kontext.
+        $templatecontext = [
+            'courses' => $coursedata,
+            'hasnext' => ($offset + $perpage) < $totalteacher,
+            'hasprev' => $page > 0,
+            'nexturl' => $nexturl->out(),
+            'prevurl' => $prevurl->out(),
+            'nextlabel' => get_string('nextpage', 'block_teamdashboard'),
+            'legend_completed' => get_string('legend_completed', 'block_teamdashboard'),
+            'legend_inprogress' => get_string('legend_inprogress', 'block_teamdashboard'),
+            'legend_overdue' => get_string('legend_overdue', 'block_teamdashboard'),
+        ];
+
+        $this->content->text = $OUTPUT->render_from_template('block_teamdashboard/courselist', $templatecontext);
         return $this->content;
     }
 }
